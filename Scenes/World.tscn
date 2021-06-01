@@ -1,0 +1,49 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://World.gd" type="Script" id=2]
+[ext_resource path="res://BG.jpg" type="Texture" id=5]
+[ext_resource path="res://PlayerCam.gd" type="Script" id=6]
+
+[sub_resource type="CanvasItemMaterial" id=4]
+blend_mode = 3
+
+[node name="World" type="Node2D"]
+z_as_relative = false
+script = ExtResource( 2 )
+
+[node name="BGLayer" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="TextureRect" type="TextureRect" parent="BGLayer"]
+material = SubResource( 4 )
+margin_right = 40.0
+margin_bottom = 40.0
+texture = ExtResource( 5 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+
+[node name="Label" type="Label" parent="UILayer"]
+margin_right = 40.0
+margin_bottom = 14.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="PlanetLayer" type="CanvasLayer" parent="."]
+layer = 2
+
+[node name="PlayerCam" type="Camera2D" parent="."]
+position = Vector2( 683, 385 )
+z_as_relative = false
+current = true
+limit_smoothed = true
+smoothing_enabled = true
+drag_margin_left = 0.0
+drag_margin_top = 0.0
+drag_margin_right = 0.0
+drag_margin_bottom = 0.0
+editor_draw_screen = false
+script = ExtResource( 6 )

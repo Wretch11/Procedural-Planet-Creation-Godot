@@ -1,0 +1,149 @@
+[gd_scene load_steps=9 format=2]
+
+[ext_resource path="res://TerrainGenerator.tscn" type="PackedScene" id=1]
+[ext_resource path="res://Planet2.shader" type="Shader" id=2]
+[ext_resource path="res://PlayerCam.gd" type="Script" id=3]
+[ext_resource path="res://Planet2.gd" type="Script" id=4]
+
+[sub_resource type="CanvasItemMaterial" id=1]
+light_mode = 2
+
+[sub_resource type="ShaderMaterial" id=2]
+resource_local_to_scene = true
+render_priority = 1
+shader = ExtResource( 2 )
+shader_param/aspect = 1.0
+shader_param/distortion = 600.0
+shader_param/radius = 1.0
+shader_param/scroll_speed = 0.01
+shader_param/scroll_dir = Vector2( -1, 0 )
+shader_param/outLineSize = 2.0
+shader_param/outLineColor = Color( 1, 1, 1, 1 )
+
+[sub_resource type="Shader" id=3]
+code = "shader_type canvas_item;
+render_mode unshaded;
+
+uniform int intensity : hint_range(0,200); 
+uniform float sizex : hint_range(0,1000);
+uniform float sizey : hint_range(0,1000);
+uniform vec4 outline_color : hint_color;
+
+varying vec2 o;
+varying vec2 f;
+
+void vertex()
+{
+	o = VERTEX;
+	vec2 uv = (UV - 0.5);
+	VERTEX += uv * float(intensity);
+	f = VERTEX;
+}
+
+void fragment()
+{
+	vec2 regular_uv;
+	regular_uv.x = UV.x + (f.x - o.x)/(sizex);
+	regular_uv.y = UV.y + (f.y - o.y)/(sizey);
+	
+	vec4 regular_color = texture(TEXTURE, regular_uv);
+	if((regular_uv.x < 0.0 || regular_uv.x > 1.0) || (regular_uv.y < 0.0 || regular_uv.y > 1.0) || regular_color.a <=0.25){
+		regular_color = vec4(0.0); 
+	}
+	
+	vec2 ps = TEXTURE_PIXEL_SIZE * float(intensity) / 100.0;
+	
+	vec4 final_color = regular_color;
+	for(int x = -1; x <= 1; x += 1){
+		for(int y = -1; y <= 1; y += 1){
+			//Get the X and Y offset from this
+			if (x==0 && y==0)
+				continue;
+				
+			vec2 outline_uv = regular_uv + vec2(float(x) * ps.x, float(y) * ps.y); 
+			
+			//Sample here, if we are out of bounds then fail
+			vec4 outline_sample = texture(TEXTURE, outline_uv);
+			if((outline_uv.x < 0.0 || outline_uv.x > 1.0) || (outline_uv.y < 0.0 || outline_uv.y > 1.0)){
+				//We aren't a real color
+				outline_sample = vec4(0);
+			}
+			
+			//Is our sample empty? Is there something nearby?
+			if(outline_sample.a > final_color.a){
+				final_color = outline_color;
+			}
+		}
+	}
+	COLOR = final_color;
+}"
+
+[sub_resource type="ShaderMaterial" id=4]
+resource_local_to_scene = true
+render_priority = 2
+shader = SubResource( 3 )
+shader_param/intensity = 100
+shader_param/sizex = 100.0
+shader_param/sizey = 100.0
+shader_param/outline_color = Color( 1, 1, 1, 1 )
+
+[node name="Planet" type="TextureRect"]
+margin_right = 1366.0
+margin_bottom = 768.0
+grow_horizontal = 2
+grow_vertical = 2
+rect_pivot_offset = Vector2( 683, 384 )
+mouse_filter = 0
+script = ExtResource( 4 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TerrainGenerator" parent="." instance=ExtResource( 1 )]
+material = SubResource( 1 )
+position = Vector2( 0, 3.25354 )
+z_index = 3
+z_as_relative = false
+
+[node name="Terrain" type="Sprite" parent="."]
+material = SubResource( 2 )
+position = Vector2( 333, 50 )
+z_as_relative = false
+centered = false
+region_rect = Rect2( 0, 0, 700, 668 )
+
+[node name="Position2D" type="Position2D" parent="Terrain"]
+light_mask = 0
+use_parent_material = true
+position = Vector2( 350, 334 )
+
+[node name="Buffer" type="BackBufferCopy" parent="Terrain"]
+rect = Rect2( 0, 0, 700, 668 )
+
+[node name="Scattering" type="Sprite" parent="Terrain"]
+show_behind_parent = true
+material = SubResource( 4 )
+position = Vector2( -7.854, -13.9142 )
+scale = Vector2( 0.956703, 0.961426 )
+z_index = 1
+centered = false
+region_enabled = true
+region_rect = Rect2( -77, -77, 800, 800 )
+__meta__ = {
+"_editor_description_": ""
+}
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2( 683, 384 )
+current = true
+script = ExtResource( 3 )
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="FpsMonitor" type="Label" parent="CanvasLayer"]
+margin_right = 40.0
+margin_bottom = 14.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+[connection signal="gui_input" from="." to="." method="_on_Planet_gui_input"]
