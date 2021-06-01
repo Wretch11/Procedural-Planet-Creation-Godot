@@ -9,7 +9,7 @@ func _ready():
 		$TerrainGenerator.visible = true
 		
 func _process(delta):
-	$CanvasLayer/FpsMonitor.text = Engine.get_frames_per_second()
+	$CanvasLayer/FpsMonitor.text = str(Engine.get_frames_per_second())
 
 func _on_Planet_gui_input(event):
 	if InputEventMouseButton\
